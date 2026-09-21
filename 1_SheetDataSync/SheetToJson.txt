@@ -1,0 +1,50 @@
+//GoogleAppsScript必須使用doGet(e)來正確回應HTTP請求。如果沒有，API可能無法公開正確的JSON
+
+function doGet(e) //e為接收輸入參數(Unity)
+{ 
+  var sheetName = e.parameter.sheet;
+
+  /* 網址ID記得要改!!! */
+  var sheet = SpreadsheetApp
+    .openById("1KJVTne6O4LA2hwPt5W9v7c0TTnnQGHfSAf4qzXShE6I")
+    .getSheetByName(sheetName); //
+
+  if (!sheet) 
+  {
+    return ContentService.createTextOutput(
+      JSON.stringify({ Error: "sheet not found" })
+    ).setMimeType(ContentService.MimeType.JSON);
+  }
+
+
+  var data = sheet.getDataRange().getValues();
+  //getDataRange >> 讀取所有有資料的儲存格
+  //getValues >> 以二維陣列(Array[][])刑式讀取出來
+
+  var jsonData = [];  //初始化一個空陣列用於存放json資料
+  var headerRow = 0;  //第一行作為標題列(iD/Profession/level...)
+  var headers = data[headerRow]; 
+
+  for (var i = headerRow + 1; i < data.length; i++) //跳過標題列
+  {
+    var entry = {}; //建立一個空物件，存放當前迭代的角色資料
+    
+    for (var j = 0; j < headers.length; j++)  
+    { 
+      entry[headers[j]] = data[i][j]; //將該列的所有內容依照標題列長度存入entry
+    }
+
+    jsonData.push(entry); //push >> 將元素添加到陣列的最後
+  }
+
+  //var jsonOutput = ContentService.createTextOutput(JSON.stringify(jsonData));
+  //ContentService.createTextOutput >> 建立一個HTTP回應內容，讓API能回傳這個 JSON。
+  //JSON.stringify >> 將jsonData陣列轉換為json格式字串
+
+  //jsonOutput.setMimeType(ContentService.MimeType.JSON);
+  //設定回應的內容格式為JSON
+  
+  return ContentService.createTextOutput(
+    JSON.stringify(jsonData)
+  ).setMimeType(ContentService.MimeType.JSON);
+}
